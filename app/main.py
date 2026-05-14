@@ -7,6 +7,7 @@ from .db import engine, SessionLocal
 from .models import Base, Message
 from .embeddings import embed
 from .retrieval import retrieve_similar_messages
+from .llm import ask_llama
 import json
 
 app = FastAPI(title="SupportWise AI")
@@ -40,6 +41,24 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     query_embedding=user_embedding,
     )
 
+    memory_text = "\n".join(
+            [f"- {item['content']}" for item in similar_messages]
+    )
+
+    prompt = f"""
+    You are SupportWise AI, a helpful customer support assistant.
+
+    Relevant previous messages:
+    {memory_text}
+
+    User message:
+    {req.message}
+
+    Answer in a helpful and concise way.
+    """
+
+    bot_reply = ask_llama(prompt)
+
     user_message = Message(
         role="user",
         content=req.message,
@@ -51,7 +70,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     db.refresh(user_message)
 
     return {
-    "reply": "Message received ✅",
+    "reply": bot_reply,
     "message_id": user_message.id,
     "memory": similar_messages,
     }
