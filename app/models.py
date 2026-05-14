@@ -11,4 +11,5 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     role = Column(String(20), nullable=False)
     content = Column(Text, nullable=False)
+    embedding = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

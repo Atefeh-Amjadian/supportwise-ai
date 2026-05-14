@@ -2,8 +2,12 @@ from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+
 from .db import engine, SessionLocal
 from .models import Base, Message
+from .embeddings import embed
+from .retrieval import retrieve_similar_messages
+import json
 
 app = FastAPI(title="SupportWise AI")
 
@@ -29,9 +33,17 @@ def health_check():
 
 @app.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
+    user_embedding = embed(req.message)
+
+    similar_messages = retrieve_similar_messages(
+    db=db,
+    query_embedding=user_embedding,
+    )
+
     user_message = Message(
         role="user",
         content=req.message,
+        embedding=json.dumps(user_embedding),
     )
 
     db.add(user_message)
@@ -39,6 +51,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     db.refresh(user_message)
 
     return {
-        "reply": "Message received ✅",
-        "message_id": user_message.id,
+    "reply": "Message received ✅",
+    "message_id": user_message.id,
+    "memory": similar_messages,
     }
