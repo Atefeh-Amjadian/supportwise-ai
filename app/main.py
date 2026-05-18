@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import logging
+from fastapi.middleware.cors import CORSMiddleware
 
 from .db import engine, SessionLocal
 from .models import Base, Message
@@ -9,6 +10,7 @@ from .embeddings import embed
 from .retrieval import retrieve_similar_messages
 from .llm import ask_llama
 from .knowledge_base import load_store_policy
+
 import json
 
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +19,17 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="SupportWise AI")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Base.metadata.create_all(bind=engine)
 

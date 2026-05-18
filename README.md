@@ -231,6 +231,11 @@ This project was built to learn:
 
 ---
 
+# Demo
+
+![SupportWise Demo](assets/demo-chat.png)
+---
+
 # Status
 
 This project is currently under active development and continuously improving.
