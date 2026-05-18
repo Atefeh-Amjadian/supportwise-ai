@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
+import logging
 
 from .db import engine, SessionLocal
 from .models import Base, Message
@@ -9,6 +9,11 @@ from .embeddings import embed
 from .retrieval import retrieve_similar_messages
 from .llm import ask_llama
 import json
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
 
 app = FastAPI(title="SupportWise AI")
 
@@ -34,6 +39,7 @@ def health_check():
 
 @app.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
+    logger.info(f"Received message: {req.message}")
     user_embedding = embed(req.message)
 
     similar_messages = retrieve_similar_messages(
@@ -59,6 +65,8 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
     bot_reply = ask_llama(prompt)
 
+    logger.info("AI response generated successfully")  
+     
     user_message = Message(
         role="user",
         content=req.message,

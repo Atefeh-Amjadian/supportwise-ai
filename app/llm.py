@@ -12,7 +12,7 @@ def ask_llama(prompt: str) -> str:
             "prompt": prompt,
             "stream": False,
         },
-        timeout=120,
+        timeout=300,
     )
 
     data = response.json()
