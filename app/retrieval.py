@@ -21,13 +21,18 @@ def retrieve_similar_messages(
     db: Session,
     query_embedding: list[float],
     top_k: int = 3,
+    exclude_message_id: int | None = None,
 ):
     messages = (
         db.query(Message)
         .filter(Message.embedding.isnot(None))
         .filter(Message.role == "user")
-        .all()
     )
+
+    if exclude_message_id is not None:
+        messages = messages.filter(Message.id != exclude_message_id)
+
+    messages = messages.all()
 
     scored_messages = []
 
@@ -35,13 +40,14 @@ def retrieve_similar_messages(
         stored_embedding = json.loads(message.embedding)
         score = cosine_similarity(query_embedding, stored_embedding)
 
-        scored_messages.append(
-            {
-                "id": message.id,
-                "content": message.content,
-                "score": score,
-            }
-        )
+        if score > 0.5:
+            scored_messages.append(
+                {
+                    "id": message.id,
+                    "content": message.content,
+                    "score": score,
+                }
+            )
 
     scored_messages.sort(key=lambda item: item["score"], reverse=True)
 

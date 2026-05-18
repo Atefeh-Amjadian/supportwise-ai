@@ -40,33 +40,9 @@ def health_check():
 @app.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
     logger.info(f"Received message: {req.message}")
+
     user_embedding = embed(req.message)
 
-    similar_messages = retrieve_similar_messages(
-    db=db,
-    query_embedding=user_embedding,
-    )
-
-    memory_text = "\n".join(
-            [f"- {item['content']}" for item in similar_messages]
-    )
-
-    prompt = f"""
-    You are SupportWise AI, a helpful customer support assistant.
-
-    Relevant previous messages:
-    {memory_text}
-
-    User message:
-    {req.message}
-
-    Answer in a helpful and concise way.
-    """
-
-    bot_reply = ask_llama(prompt)
-
-    logger.info("AI response generated successfully")  
-     
     user_message = Message(
         role="user",
         content=req.message,
@@ -77,8 +53,34 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user_message)
 
+    similar_messages = retrieve_similar_messages(
+        db=db,
+        query_embedding=user_embedding,
+        exclude_message_id=user_message.id,
+    )
+
+    memory_text = "\n".join(
+        [f"- {item['content']}" for item in similar_messages]
+    )
+
+    prompt = f"""
+You are SupportWise AI, a helpful customer support assistant.
+
+Relevant previous messages:
+{memory_text}
+
+User message:
+{req.message}
+
+Answer in a helpful and concise way.
+"""
+
+    bot_reply = ask_llama(prompt)
+
+    logger.info("AI response generated successfully")
+
     return {
-    "reply": bot_reply,
-    "message_id": user_message.id,
-    "memory": similar_messages,
+        "reply": bot_reply,
+        "message_id": user_message.id,
+        "memory": similar_messages,
     }

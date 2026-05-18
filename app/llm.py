@@ -1,20 +1,37 @@
+import os
 import httpx
 
 
-OLLAMA_URL = "http://host.docker.internal:11434/api/generate"
+OLLAMA_URL = os.getenv(
+    "OLLAMA_URL",
+    "http://host.docker.internal:11434/api/generate"
+)
 
+MODEL_NAME = os.getenv("MODEL_NAME", "llama3.2")
 
 def ask_llama(prompt: str) -> str:
-    response = httpx.post(
-        OLLAMA_URL,
-        json={
-            "model": "llama3.2",
-            "prompt": prompt,
-            "stream": False,
-        },
-        timeout=300,
-    )
+    try:
+        response = httpx.post(
+            OLLAMA_URL,
+            json={
+                "model": MODEL_NAME,
+                "prompt": prompt,
+                "stream": False,
+            },
+            timeout=300,
+        )
 
-    data = response.json()
+        response.raise_for_status()
 
-    return data["response"]
+        data = response.json()
+
+        return data.get("response", "No response from model.")
+
+    except httpx.TimeoutException:
+        return "AI service timeout. Please try again."
+
+    except httpx.ConnectError:
+        return "AI service is currently unavailable."
+
+    except Exception as e:
+        return f"Unexpected AI error: {str(e)}"
