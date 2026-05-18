@@ -8,6 +8,7 @@ from .models import Base, Message
 from .embeddings import embed
 from .retrieval import retrieve_similar_messages
 from .llm import ask_llama
+from .knowledge_base import load_store_policy
 import json
 
 logging.basicConfig(level=logging.INFO)
@@ -63,17 +64,24 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         [f"- {item['content']}" for item in similar_messages]
     )
 
+    store_policy = load_store_policy()
+
     prompt = f"""
-You are SupportWise AI, a helpful customer support assistant.
+    You are SupportWise AI, a helpful customer support assistant for an online store.
 
-Relevant previous messages:
-{memory_text}
+    Store policy:
+    {store_policy}
 
-User message:
-{req.message}
+    Relevant previous messages:
+    {memory_text}
 
-Answer in a helpful and concise way.
-"""
+    User message:
+    {req.message}
+
+    Answer based on the store policy when possible.
+    If the policy does not contain the answer, ask the user for more details.
+    Keep the answer clear and concise.
+    """
 
     bot_reply = ask_llama(prompt)
 

@@ -1,0 +1,17 @@
+ORDER TRACKING
+Customers can track their orders using their order number and email address.
+
+SHIPPING
+Standard shipping takes 3 to 5 business days.
+
+RETURNS
+Customers can return products within 7 days after delivery.
+
+REFUNDS
+Refunds are processed within 5 business days after approval.
+
+SUPPORT HOURS
+Customer support is available Monday to Friday from 9 AM to 6 PM.
+
+PAYMENT METHODS
+We accept credit cards, debit cards, and PayPal.
