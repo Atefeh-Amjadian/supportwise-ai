@@ -37,6 +37,20 @@ def get_db():
 def health_check():
     return {"status": "ok"}
 
+@app.get("/messages")
+def get_messages(db: Session = Depends(get_db)):
+    messages = db.query(Message).order_by(Message.id.desc()).all()
+
+    return [
+        {
+            "id": msg.id,
+            "role": msg.role,
+            "content": msg.content,
+        }
+        for msg in messages
+    ]
+
+
 
 @app.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
